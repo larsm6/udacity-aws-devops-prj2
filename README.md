@@ -19,6 +19,7 @@ In order to create your server infrastructure you can use the following as soon 
 ```
 
 ### Updates
+The WebAppGroup contains an update policy in order to terminate and relaunch the instances one by one while the service keeps working.
 ```shell
 ./scripts/update.sh udagram-network network.yml network-parameters.json
 ```
