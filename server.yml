@@ -74,7 +74,7 @@ Resources:
       IamInstanceProfile: !Ref Ec2InstanceProfile
       SecurityGroups:
       - Ref: WebServerSecGroup
-      InstanceType: t2.micro
+      InstanceType: t3.medium
       BlockDeviceMappings:
       - DeviceName: "/dev/sdk"
         Ebs:
