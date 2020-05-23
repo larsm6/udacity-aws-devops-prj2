@@ -7,6 +7,7 @@ Link to the solution: [Deployed Solution](http://udagr-webap-zwcqjps9hg23-481232
 [Lucidchart link](https://app.lucidchart.com/invitations/accept/d9f62676-1cbd-4539-9acc-7d839de0a569)
 
 ## Usage
+### Creation
 In order to create the Infrastructure you can use the scripts:
 
 ```shell
@@ -15,4 +16,12 @@ In order to create the Infrastructure you can use the scripts:
 In order to create your server infrastructure you can use the following as soon as the previous CloudFormation stack completed execution.
 ```shell
 ./scripts/create.sh udagram-servers server.yml server-parameters.json
+```
+
+### Updates
+```shell
+./scripts/update.sh udagram-network network.yml network-parameters.json
+```
+```shell
+./scripts/update.sh udagram-servers server.yml server-parameters.json
 ```
