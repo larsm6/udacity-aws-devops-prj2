@@ -1,6 +1,6 @@
 Description: >
-  Udacity Project 2 "Udagram" by Lars Maertins Server Infrastructure
-  Load Balancer, security groups, instance profile and launch configuration
+  Udacity Project 2 "Udagram" by Lars Maertins Server Infrastructure with Bastion Host.
+  Configuration contains Load Balancer, security groups, instance profile and launch configuration of the WebApp and the Bastion Host.
 
 Parameters:
   EnvironmentName:
@@ -14,6 +14,20 @@ Resources:
       InstanceProfileName: ec2-instance-profile      
       Roles: 
         - UdacityS3ReadOnlyEC2
+  
+  BastionLaunchConfig:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      AssociatePublicIpAddress: true
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          apt-get update -y
+      ImageId: ami-003634241a8fcdec0
+      KeyName: tmp_udacity_ec2_instance
+      SecurityGroups:
+      - Ref:   LBSecGroup
+      InstanceType: t2.micro
 
   WebAppLaunchConfig:
     Type: AWS::AutoScaling::LaunchConfiguration
@@ -30,6 +44,7 @@ Resources:
           unzip -o udacity.zip
       ImageId: ami-003634241a8fcdec0
       IamInstanceProfile: !Ref Ec2InstanceProfile
+      KeyName: tmp_udacity_ec2_instance
       SecurityGroups:
       - Ref: WebServerSecGroup
       InstanceType: t3.medium
@@ -51,11 +66,44 @@ Resources:
         FromPort: 80
         ToPort: 80
         CidrIp: 0.0.0.0/0
+      - IpProtocol: tcp
+        FromPort: 22
+        ToPort: 22
+        CidrIp: 0.0.0.0/0
       SecurityGroupEgress:
       - IpProtocol: tcp
         FromPort: 80
         ToPort: 80
         CidrIp: 0.0.0.0/0
+      - IpProtocol: tcp
+        FromPort: 22
+        ToPort: 22
+        CidrIp: 0.0.0.0/0
+
+
+  BastionGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    UpdatePolicy: 
+      AutoScalingRollingUpdate: 
+        MinInstancesInService: "1"
+        MaxBatchSize: "1"
+        WaitOnResourceSignals: "false"
+        SuspendProcesses:
+        - HealthCheck
+        - ReplaceUnhealthy
+        - AZRebalance
+        - AlarmNotification
+        - ScheduledActions
+    Properties:
+      VPCZoneIdentifier:
+      - Fn::ImportValue: 
+          !Sub "${EnvironmentName}-PUB-NETS"
+      LaunchConfigurationName:
+        Ref: BastionLaunchConfig
+      MinSize: '2'
+      MaxSize: '4'
+      TargetGroupARNs:
+      - Ref: WebAppTargetGroup
 
   WebServerSecGroup:
     Type: AWS::EC2::SecurityGroup
@@ -68,6 +116,10 @@ Resources:
       - IpProtocol: tcp
         FromPort: 80
         ToPort: 80
+        CidrIp: 0.0.0.0/0
+      - IpProtocol: tcp
+        FromPort: 22
+        ToPort: 22
         CidrIp: 0.0.0.0/0
       SecurityGroupEgress:
       - IpProtocol: tcp
